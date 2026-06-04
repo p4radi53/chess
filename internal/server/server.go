@@ -1,6 +1,8 @@
 package server
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/p4radi53/chess/internal/chess"
 )
@@ -32,7 +34,9 @@ func StartServer() {
 	r.GET("/legal-moves", handleShowLegalMoves)
 	r.GET("/ping", handlePing)
 
-	r.Run()
+	if err := r.Run(); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }
 
 func handleGetBoard(c *gin.Context) {
