@@ -81,5 +81,8 @@ func handleShowLegalMoves(c *gin.Context) {
 		return
 	}
 	moves := game.Board.LegalMoves(chess.Square{File: request.File, Rank: request.Rank})
+	if moves == nil {
+		moves = []chess.Square{}
+	}
 	c.JSON(200, moves)
 }
