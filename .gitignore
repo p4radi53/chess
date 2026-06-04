@@ -1,0 +1,10 @@
+# Go
+bin/
+*.exe
+*.test
+*.out
+
+# Next.js
+web/chess/.next/
+web/chess/node_modules/
+web/chess/.env*.local
