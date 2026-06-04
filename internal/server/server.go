@@ -28,7 +28,7 @@ func StartServer() {
 	r.Use(func(c *gin.Context) {
 		setupCorsMiddleware()(c)
 	})
-	r.GET("/board", handleGetBoard)
+	r.GET("/game", handleGetGame)
 	r.POST("/move", handleMove)
 	r.POST("/reset", handleNewGame)
 	r.GET("/legal-moves", handleShowLegalMoves)
@@ -39,8 +39,8 @@ func StartServer() {
 	}
 }
 
-func handleGetBoard(c *gin.Context) {
-	c.JSON(200, game.Board)
+func handleGetGame(c *gin.Context) {
+	c.JSON(200, game)
 }
 
 func handlePing(c *gin.Context) {
@@ -49,7 +49,7 @@ func handlePing(c *gin.Context) {
 
 func handleNewGame(c *gin.Context) {
 	game = chess.NewGame()
-	c.JSON(200, game.Board)
+	c.JSON(200, game)
 }
 
 func handleMove(c *gin.Context) {
@@ -68,7 +68,7 @@ func handleMove(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, game.Board)
+	c.JSON(200, game)
 }
 
 func handleShowLegalMoves(c *gin.Context) {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { BoardState } from "./page";
+import { GameState } from "./page";
 
 const API = "http://localhost:8080";
 
@@ -18,48 +18,47 @@ const ranks = [7, 6, 5, 4, 3, 2, 1, 0];
 const files = [0, 1, 2, 3, 4, 5, 6, 7];
 
 interface Square {
-  File: number;
-  Rank: number;
-}
-
-interface Coordinates {
   file: number;
   rank: number;
 }
-
-export default function Board({ initialBoard }: { initialBoard: BoardState }) {
-  const [board, setBoard] = useState<BoardState>(initialBoard);
-  const [selected, setSelected] = useState<{ coordinates: Coordinates } | null>(
-    null,
-  );
+export default function Board({ initialGame }: { initialGame: GameState }) {
+  const [game, setGame] = useState<GameState>(initialGame);
+  const [selected, setSelected] = useState<{ square: Square } | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
 
-  async function handleSquareClick(coordinates: Coordinates) {
-    const cell = board.Cells[coordinates.file][coordinates.rank];
+  async function handleSquareClick(square: Square) {
+    const cell = game.Board.Cells[square.file][square.rank];
 
     if (selected === null) {
       if (cell.Piece === 0) return;
-      setSelected({ coordinates });
+      if (cell.Color !== game.CurrentTurn) return;
+      setSelected({ square });
       const res = await fetch(
-        `${API}/legal-moves?file=${coordinates.file}&rank=${coordinates.rank}`,
+        `${API}/legal-moves?file=${square.file}&rank=${square.rank}`,
       );
       if (res.ok) setLegalMoves(await res.json());
     } else {
       const from = selected;
+      if (!legalMoves.some((m) => m.file === square.file && m.rank === square.rank)) {
+        //reset selection if clicked on an illegal square
+        setSelected(null);
+        setLegalMoves([]);
+        return;
+      }
       setSelected(null);
       setLegalMoves([]);
       const res = await fetch(`${API}/move`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          from_file: from.coordinates.file,
-          from_rank: from.coordinates.rank,
-          to_file: coordinates.file,
-          to_rank: coordinates.rank,
+          from_file: from.square.file,
+          from_rank: from.square.rank,
+          to_file: square.file,
+          to_rank: square.rank,
         }),
       });
       if (res.ok) {
-        setBoard(await res.json());
+        setGame(await res.json());
       } else {
         const err = await res.json();
         console.error("Move failed:", err);
@@ -69,7 +68,7 @@ export default function Board({ initialBoard }: { initialBoard: BoardState }) {
 
   async function handleReset() {
     const res = await fetch(`${API}/reset`, { method: "POST" });
-    if (res.ok) setBoard(await res.json());
+    if (res.ok) setGame(await res.json());
   }
 
   return (
@@ -86,20 +85,20 @@ export default function Board({ initialBoard }: { initialBoard: BoardState }) {
                   {rank + 1}
                 </td>
                 {files.map((file) => {
-                  const cell = board.Cells[file][rank];
+                  const cell = game.Board.Cells[file][rank];
                   const isLight = (file + rank) % 2 !== 0;
                   const isSelected =
-                    selected?.coordinates.file === file &&
-                    selected?.coordinates.rank === rank;
+                    selected?.square.file === file &&
+                    selected?.square.rank === rank;
                   const isLegal = legalMoves.some(
-                    (m: Square) => m.File === file && m.Rank === rank,
+                    (m: Square) => m.file === file && m.rank === rank,
                   );
                   const img = pieceImage(cell.Piece, cell.Color);
 
                   return (
                     <td
                       key={file}
-                      onClick={() => handleSquareClick({ file, rank })}
+                      onClick={() => handleSquareClick({ file: file, rank: rank })}
                       style={{
                         width: 64,
                         height: 64,
@@ -144,6 +143,9 @@ export default function Board({ initialBoard }: { initialBoard: BoardState }) {
             ))}
           </tbody>
         </table>
+        <div className="text-sm text-zinc-300">
+          {game.CurrentTurn === 0 ? "White" : "Black"} to move
+        </div>
         <button
           onClick={handleReset}
           className="mt-2 px-4 py-1 text-sm text-zinc-300 bg-zinc-700 hover:bg-zinc-600 rounded"

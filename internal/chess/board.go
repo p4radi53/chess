@@ -29,8 +29,8 @@ type Board struct {
 }
 
 type Square struct {
-	File int
-	Rank int
+	File int `json:"file"`
+	Rank int `json:"rank"`
 }
 
 func (b *Board) GetCell(file, rank int) ColoredPiece {

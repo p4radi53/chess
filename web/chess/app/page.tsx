@@ -2,20 +2,24 @@ import Board from "./Board";
 
 const API = "http://localhost:8080";
 
-export type Cell = {
-  File: number;
-  Rank: number;
+export type ColoredPiece = {
   Piece: number;
   Color: number;
 };
 
 export type BoardState = {
-  Cells: Cell[][];
+  Cells: ColoredPiece[][];
+};
+
+export type GameState = {
+  Board: BoardState;
+  CurrentTurn: number;
+  MoveCount: number;
 };
 
 export default async function Home() {
-  const res = await fetch(`${API}/board`, { cache: "no-store" });
-  const board: BoardState = await res.json();
+  const res = await fetch(`${API}/game`, { cache: "no-store" });
+  const game: GameState = await res.json();
 
-  return <Board initialBoard={board} />;
+  return <Board initialGame={game} />;
 }
