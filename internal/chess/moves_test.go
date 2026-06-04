@@ -52,6 +52,15 @@ func TestPawnMoves(t *testing.T) {
 			from:     Square{4, 1},
 			expected: []Square{{4, 2}, {4, 3}},
 		},
+		{
+			name: "double push on the edge",
+			setup: func(b *Board) {
+				b.SetCell(0, 1, Pawn, White)
+			},
+			from:     Square{0, 1},
+			expected: []Square{{0, 2}, {0, 3}},
+			excluded: []Square{},
+		},
 	}
 
 	runMoveTests(t, tests)
