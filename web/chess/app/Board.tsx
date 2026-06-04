@@ -39,7 +39,11 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
       if (res.ok) setLegalMoves(await res.json());
     } else {
       const from = selected;
-      if (!legalMoves.some((m) => m.file === square.file && m.rank === square.rank)) {
+      if (
+        !legalMoves.some(
+          (m) => m.file === square.file && m.rank === square.rank,
+        )
+      ) {
         //reset selection if clicked on an illegal square
         setSelected(null);
         setLegalMoves([]);
@@ -98,7 +102,9 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
                   return (
                     <td
                       key={file}
-                      onClick={() => handleSquareClick({ file: file, rank: rank })}
+                      onClick={() =>
+                        handleSquareClick({ file: file, rank: rank })
+                      }
                       style={{
                         width: 64,
                         height: 64,
