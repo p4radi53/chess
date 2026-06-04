@@ -57,9 +57,10 @@ func (b *Board) isInBounds(file, rank int) bool {
 func (b *Board) pawnMoves(from Square, color Color) []Square {
 	var moves []Square
 	var direction int
-	if color == White {
+	switch color {
+	case White:
 		direction = 1
-	} else if color == Black {
+	case Black:
 		direction = -1
 	}
 
