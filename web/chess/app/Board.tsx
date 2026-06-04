@@ -151,6 +151,8 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
         </table>
         <div className="text-sm text-zinc-300">
           {game.CurrentTurn === 0 ? "White" : "Black"} to move
+          {game.IsWhiteInCheck && " · White is in check"}
+          {game.IsBlackInCheck && " · Black is in check"}
         </div>
         <button
           onClick={handleReset}

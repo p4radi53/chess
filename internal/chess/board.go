@@ -138,6 +138,26 @@ var bishopDirections = [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
 var rookDirections = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 var queenDirections = append(bishopDirections, rookDirections...)
 
+func (b *Board) IsSquareAttackedByBishopQueenRook(square Square, byColor Color) bool {
+	for _, dir := range queenDirections {
+		for step := 1; step < 8; step++ {
+			newFile := square.File + dir[0]*step
+			newRank := square.Rank + dir[1]*step
+			if !b.IsCellWithinBounds(newFile, newRank) {
+				break
+			}
+			cell := b.GetCell(newFile, newRank)
+			if cell.Piece != Empty {
+				if cell.Color == byColor && (cell.Piece == Queen || (cell.Piece == Rook && (dir[0] == 0 || dir[1] == 0)) || (cell.Piece == Bishop && dir[0] != 0 && dir[1] != 0)) {
+					return true
+				}
+				break
+			}
+		}
+	}
+	return false
+}
+
 func (b *Board) LegalMoves(from Square) []Square {
 	cell := b.GetCell(from.File, from.Rank)
 

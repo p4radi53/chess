@@ -15,6 +15,8 @@ export type GameState = {
   Board: BoardState;
   CurrentTurn: number;
   MoveCount: number;
+  IsWhiteInCheck: boolean;
+  IsBlackInCheck: boolean;
 };
 
 export default async function Home() {
