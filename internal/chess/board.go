@@ -46,12 +46,17 @@ func (b *Board) IsCellOccupiedByOpponent(file, rank int, color Color) bool {
 	return cell.Piece != Empty && cell.Color != color
 }
 
-func (b *Board) SetCell(file, rank int, piece Piece, color Color) {
-	b.Cells[file][rank] = ColoredPiece{Piece: piece, Color: color}
+func (b *Board) IsCellOccupiedByOwnPiece(file, rank int, color Color) bool {
+	cell := b.GetCell(file, rank)
+	return cell.Piece != Empty && cell.Color == color
 }
 
-func (b *Board) isInBounds(file, rank int) bool {
+func (b *Board) IsCellWithinBounds(file, rank int) bool {
 	return file >= 0 && file < 8 && rank >= 0 && rank < 8
+}
+
+func (b *Board) SetCell(file, rank int, piece Piece, color Color) {
+	b.Cells[file][rank] = ColoredPiece{Piece: piece, Color: color}
 }
 
 func (b *Board) pawnMoves(from Square, color Color) []Square {
@@ -62,11 +67,6 @@ func (b *Board) pawnMoves(from Square, color Color) []Square {
 		direction = 1
 	case Black:
 		direction = -1
-	}
-
-	// no sense in calculating moves if the pawn is already on the last rank
-	if !b.isInBounds(from.File, from.Rank+direction) {
-		return moves
 	}
 
 	isFrontSquareEmpty := b.IsCellEmpty(from.File, from.Rank+direction)
@@ -95,11 +95,37 @@ func (b *Board) pawnMoves(from Square, color Color) []Square {
 
 func (b *Board) knightMoves(from Square, color Color) []Square {
 	var moves []Square
+
+	for _, offset := range [][2]int{{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}} {
+		newFile := from.File + offset[0]
+		newRank := from.Rank + offset[1]
+		if b.IsCellWithinBounds(newFile, newRank) && !b.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
+			moves = append(moves, Square{File: newFile, Rank: newRank})
+		}
+	}
+
 	return moves
 }
 
 func (b *Board) slidingMoves(from Square, directions [][2]int, color Color) []Square {
 	var moves []Square
+
+	for _, dir := range directions {
+		for step := 1; step < 8; step++ {
+			newFile := from.File + dir[0]*step
+			newRank := from.Rank + dir[1]*step
+			if !b.IsCellWithinBounds(newFile, newRank) {
+				break
+			}
+			if b.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
+				break
+			}
+			moves = append(moves, Square{File: newFile, Rank: newRank})
+			if b.IsCellOccupiedByOpponent(newFile, newRank, color) {
+				break
+			}
+		}
+	}
 	return moves
 }
 
