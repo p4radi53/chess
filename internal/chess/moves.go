@@ -68,11 +68,6 @@ func (b *Board) slidingMoves(from Square, directions [][2]int, color Color) []Sq
 	return moves
 }
 
-func (b *Board) kingMoves(from Square, color Color) []Square {
-	var moves []Square
-	return moves
-}
-
 var bishopDirections = [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
 var rookDirections = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 var queenDirections = append(bishopDirections, rookDirections...)
@@ -95,6 +90,71 @@ func (b *Board) IsSquareAttackedByBishopQueenRook(square Square, byColor Color) 
 		}
 	}
 	return false
+}
+func enemyColor(c Color) Color {
+	if c == White {
+		return Black
+	}
+	return White
+}
+
+func (b *Board) IsSquareUnderAttack(square Square, byColor Color) bool{
+	if b.IsSquareAttackedByBishopQueenRook(square, byColor){
+		return true
+	}
+
+	// horse
+	for _, offset := range [][2]int{{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}} {
+		newFile := square.File + offset[0]
+		newRank := square.Rank + offset[1]
+		coloredPiece := b.GetCell(newFile, newRank)
+		if b.IsCellWithinBounds(newFile, newRank) && (coloredPiece.Color == byColor && coloredPiece.Piece == Knight){
+			return true
+		}
+	}
+
+	// pawn
+	var transform int
+	if byColor == White {
+    	transform = 1
+	} else {
+    	transform = -1
+	}
+	if cp := b.GetCell(square.File+transform, square.Rank-1); b.IsCellWithinBounds(square.File+transform, square.Rank-1) && cp.Piece == Pawn && cp.Color == byColor {
+    	return true
+	}
+	if cp := b.GetCell(square.File+transform, square.Rank+1); b.IsCellWithinBounds(square.File+transform, square.Rank+1) && cp.Piece == Pawn && cp.Color == byColor {
+    	return true
+	}
+
+	// king
+	for _, offset := range [][2]int{{1, 1}, {1, 0}, {1, -1}, {0, 1}, {0, -1}, {-1, 1}, {-1, 0}, {-1, -1}} {
+		newFile := square.File + offset[0]
+		newRank := square.Rank + offset[1]
+		if cp := b.GetCell(newFile, newRank); b.IsCellWithinBounds(newFile, newRank) && cp.Color == byColor && cp.Piece == King{
+			return true
+		}
+	}
+	return false
+}
+
+func (b *Board) kingMoves(from Square, color Color) []Square {
+	var moves []Square
+	for _, offset := range [][2]int{{1, 1}, {1, 0}, {1, -1}, {0, 1}, {0, -1}, {-1, 1}, {-1, 0}, {-1, -1}} {
+		newFile := from.File + offset[0]
+		newRank := from.Rank + offset[1]
+		targetSquare := Square{File: newFile, Rank: newRank}
+		if b.IsCellWithinBounds(newFile, newRank) && !b.IsCellOccupiedByOwnPiece(newFile, newRank, color) && b.IsSquareUnderAttack(targetSquare, enemyColor(color)){
+			moves = append(moves, Square{File: newFile, Rank: newRank})
+		}
+	}
+
+	// Castle
+	// wieze nie ruszone e
+	// pola wolne
+	// nie pod atackiem pole na ktorych rusza sie krol
+
+	return moves
 }
 
 func (b *Board) LegalMoves(from Square) []Square {
