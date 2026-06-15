@@ -2,11 +2,35 @@ name: Deploy
 
 on:
   push:
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: self-hosted
-    steps:
-      - name: Hello from Pi
-        run: echo "Runner is working on $(hostname)"
 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Go server
+        run: |
+          cd $GITHUB_WORKSPACE
+          go build -o chess-server ./cmd/server
+
+      - name: Deploy Go server
+        run: |
+          sudo systemctl stop chess-server || true
+          sudo cp chess-server /srv/chess-server/chess-server
+          sudo systemctl start chess-server
+
+      - name: Build Next.js frontend
+        working-directory: web/chess
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Deploy Next.js frontend
+        run: |
+          sudo systemctl stop chess-web || true
+          sudo rsync -a --delete web/chess/.next/ /srv/chess-web/.next/
+          sudo rsync -a --delete web/chess/public/ /srv/chess-web/public/
+          sudo systemctl start chess-web
