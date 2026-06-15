@@ -14,7 +14,6 @@ export type BoardState = {
 export type GameState = {
   Board: BoardState;
   CurrentTurn: number;
-  MoveCount: number;
   IsWhiteInCheck: boolean;
   IsBlackInCheck: boolean;
 };

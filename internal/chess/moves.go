@@ -1,6 +1,12 @@
 package chess
 
-func (b *Board) pawnMoves(from Square, color Color) []Square {
+type Move struct {
+	ColoredPiece ColoredPiece
+	OldSquare    Square
+	NewSquare    Square
+}
+
+func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {
 	var moves []Square
 	var direction int
 	switch color {
@@ -27,6 +33,17 @@ func (b *Board) pawnMoves(from Square, color Color) []Square {
 		if isFrontSquareEmpty && b.IsCellEmpty(from.File, from.Rank+2*direction) {
 			moves = append(moves, Square{File: from.File, Rank: from.Rank + 2*direction})
 		}
+	}
+
+	// En passante
+	if (lastMove.ColoredPiece.Piece == Pawn) &&
+		(lastMove.NewSquare.Rank-lastMove.OldSquare.Rank == 2 ||
+			lastMove.OldSquare.Rank-lastMove.NewSquare.Rank == 2) &&
+		(lastMove.NewSquare.File == from.File-1 ||
+			lastMove.NewSquare.File == from.File+1) &&
+		lastMove.NewSquare.Rank == from.Rank {
+		moves = append(moves, Square{File: lastMove.NewSquare.File,
+			Rank: from.Rank + direction})
 	}
 
 	return moves
@@ -97,14 +114,14 @@ func (b *Board) IsSquareAttackedByBishopQueenRook(square Square, byColor Color) 
 	return false
 }
 
-func (b *Board) LegalMoves(from Square) []Square {
+func (b *Board) LegalMoves(from Square, lastMove Move) []Square {
 	cell := b.GetCell(from.File, from.Rank)
 
 	switch cell.Piece {
 	case Empty:
 		return nil
 	case Pawn:
-		return b.pawnMoves(from, cell.Color)
+		return b.pawnMoves(from, cell.Color, lastMove)
 	case Knight:
 		return b.knightMoves(from, cell.Color)
 	case Bishop:
