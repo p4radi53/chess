@@ -115,7 +115,7 @@ func enemyColor(c Color) Color {
 	return White
 }
 
-func (b *Board) IsSquareUnderAttack(square Square, byColor Color) bool{
+func (b *Board) IsSquareUnderAttack(square Square, attackingColor Color) bool{
 	if b.IsSquareAttackedByBishopQueenRook(square, byColor){
 		return true
 	}
