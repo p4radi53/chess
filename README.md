@@ -17,6 +17,18 @@ internal/server/   # HTTP handlers
 web/chess/         # Next.js app
 ```
 
+## Setup
+
+Create `web/chess/.env.local`:
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080
+API_URL=http://localhost:8080
+```
+
+Initial run:
+```bash
+bun install
+```
 ## Running
 
 **Backend** (from project root):
@@ -26,9 +38,9 @@ go run cmd/server/main.go
 
 **Frontend** (from `web/chess`):
 ```bash
-bun dev
+bun run dev
 # or
 npm run dev
 ```
 
-Then open `http://localhost:3000`.
+Then open `http://localhost:3000` (or other assigned port).

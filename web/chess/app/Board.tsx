@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { GameState } from "./page";
 
-const API = "http://localhost:8080";
+const API = process.env.NEXT_PUBLIC_API_URL!;
 
 const PIECE_LETTER = ["", "K", "Q", "R", "B", "N", "P"];
 

@@ -1,6 +1,6 @@
 import Board from "./Board";
 
-const API = "http://localhost:8080";
+const API = process.env.API_URL!;
 
 export type ColoredPiece = {
   Piece: number;
