@@ -154,10 +154,8 @@ func (b *Board) kingMoves(from Square, color Color) []Square {
 		}
 	}
 
-	// Castle
-	// wieze nie ruszone e
-	// pola wolne
-	// nie pod atackiem pole na ktorych rusza sie krol
+	// TODO: add castling
+	// TODO: discovered checks
 
 	return moves
 }
