@@ -6,32 +6,31 @@ type Move struct {
 	NewSquare    Square
 }
 
+var colorDirection = []int{1, -1} // White, Black
+var knightDirections = [][2]int{{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}} 
+var bishopDirections = [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
+var rookDirections = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+var queenDirections = append(bishopDirections, rookDirections...)
+
 func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {
 	var moves []Square
-	var direction int
-	switch color {
-	case White:
-		direction = 1
-	case Black:
-		direction = -1
-	}
 
-	isFrontSquareEmpty := b.IsCellEmpty(from.File, from.Rank+direction)
+	isFrontSquareEmpty := b.IsCellEmpty(from.File, from.Rank+colorDirection[color])
 
 	if isFrontSquareEmpty {
-		moves = append(moves, Square{File: from.File, Rank: from.Rank + direction})
+		moves = append(moves, Square{File: from.File, Rank: from.Rank + colorDirection[color]})
 	}
-	if (from.File-1 >= 0) && b.IsCellOccupiedByOpponent(from.File-1, from.Rank+direction, color) {
-		moves = append(moves, Square{File: from.File - 1, Rank: from.Rank + direction})
+	if (from.File-1 >= 0) && b.IsCellOccupiedByOpponent(from.File-1, from.Rank + colorDirection[color], color) {
+		moves = append(moves, Square{File: from.File - 1, Rank: from.Rank + colorDirection[color]})
 	}
-	if (from.File+1 < 8) && b.IsCellOccupiedByOpponent(from.File+1, from.Rank+direction, color) {
-		moves = append(moves, Square{File: from.File + 1, Rank: from.Rank + direction})
+	if (from.File+1 < 8) && b.IsCellOccupiedByOpponent(from.File+1, from.Rank + colorDirection[color], color) {
+		moves = append(moves, Square{File: from.File + 1, Rank: from.Rank + colorDirection[color]})
 	}
 
 	// Initial double move
 	if (color == White && from.Rank == 1) || (color == Black && from.Rank == 6) {
-		if isFrontSquareEmpty && b.IsCellEmpty(from.File, from.Rank+2*direction) {
-			moves = append(moves, Square{File: from.File, Rank: from.Rank + 2*direction})
+		if isFrontSquareEmpty && b.IsCellEmpty(from.File, from.Rank + 2 * colorDirection[color]) {
+			moves = append(moves, Square{File: from.File, Rank: from.Rank + 2*colorDirection[color]})
 		}
 	}
 
@@ -85,10 +84,7 @@ func (b *Board) slidingMoves(from Square, directions [][2]int, color Color) []Sq
 	return moves
 }
 
-var bishopDirections = [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
-var rookDirections = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
-var queenDirections = append(bishopDirections, rookDirections...)
-var knightDirections = [][2]int{{2, 1}, {2, -1}, {-2, 1}, {-2, -1}, {1, 2}, {1, -2}, {-1, 2}, {-1, -2}} 
+
 
 func (b *Board) IsSquareAttackedByBishopQueenRook(square Square, attackingColor Color) bool {
 	for _, dir := range queenDirections {
@@ -141,12 +137,8 @@ func (b *Board) IsSquareUnderAttack(square Square, attackingColor Color) bool {
 	}
 
 	// pawn
-	transform := 1
-	if byColor == White {
-		transform = -1
-	}
 	for _, fileDelta := range []int{-1, 1} {
-		f, r := square.File+fileDelta, square.Rank+transform
+		f, r := square.File+fileDelta, square.Rank + colorDirection[attackingColor]
 		if b.IsCellWithinBounds(f, r) {
 			if cp := b.GetCell(f, r); cp.Piece == Pawn && cp.Color == byColor {
 				return true
