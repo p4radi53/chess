@@ -71,6 +71,19 @@ func (c *CastlingPossibility) updateCastlingPossibility(lastMove *Move) {
 			c.IsBlackKingsidePossible = false
 		}
 	}
+
+	if lastMove.CapturedPiece.Piece == Rook {
+		switch lastMove.NewSquare {
+		case Square{File: 0, Rank: 0}:
+			c.IsWhiteQueensidePossible = false
+		case Square{File: 7, Rank: 0}:
+			c.IsWhiteKingsidePossible = false
+		case Square{File: 0, Rank: 7}:
+			c.IsBlackQueensidePossible = false
+		case Square{File: 7, Rank: 7}:
+			c.IsBlackKingsidePossible = false
+		}
+	}
 }
 
 func (b *Board) castlingRookMove(movedPiece ColoredPiece, fromSquare Square, toSquare Square) {

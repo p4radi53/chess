@@ -188,6 +188,44 @@ func TestUpdateCastlingPossibilityRookMove(t *testing.T) {
 	}
 }
 
+func TestUpdateCastlingPossibilityRookCaptured(t *testing.T) {
+	tests := []struct {
+		name      string
+		captureOn Square
+		assertFn  func(CastlingPossibility) (bool, bool)
+	}{
+		{"white kingside rook captured", Square{7, 0}, func(c CastlingPossibility) (bool, bool) {
+			return c.IsWhiteKingsidePossible, c.IsWhiteQueensidePossible
+		}},
+		{"white queenside rook captured", Square{0, 0}, func(c CastlingPossibility) (bool, bool) {
+			return c.IsWhiteQueensidePossible, c.IsWhiteKingsidePossible
+		}},
+		{"black kingside rook captured", Square{7, 7}, func(c CastlingPossibility) (bool, bool) {
+			return c.IsBlackKingsidePossible, c.IsBlackQueensidePossible
+		}},
+		{"black queenside rook captured", Square{0, 7}, func(c CastlingPossibility) (bool, bool) {
+			return c.IsBlackQueensidePossible, c.IsBlackKingsidePossible
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := CastlingPossibility{true, true, true, true}
+			c.updateCastlingPossibility(&Move{
+				ColoredPiece:  ColoredPiece{Bishop, White},
+				CapturedPiece: ColoredPiece{Rook, Black},
+				NewSquare:     tt.captureOn,
+			})
+			revoked, kept := tt.assertFn(c)
+			if revoked {
+				t.Errorf("expected right to be revoked after rook captured")
+			}
+			if !kept {
+				t.Errorf("expected other right to be unaffected")
+			}
+		})
+	}
+}
+
 func TestUpdateCastlingPossibilityUnrelatedMove(t *testing.T) {
 	c := CastlingPossibility{true, true, true, true}
 	c.updateCastlingPossibility(&Move{ColoredPiece: ColoredPiece{Pawn, White}})
