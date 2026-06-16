@@ -35,8 +35,8 @@ func (b *Board) isSquareAttackedByKnight(square Square, attackingColor Color) bo
 }
 
 func (b *Board) isSquareAttackedByPawn(square Square, attackingcolor Color) bool {
-	for _, offset := range pawnDirection {
-		newFile, newRank := square.File+offset, square.Rank+colorDirection[attackingcolor]
+	for _, offset := range pawnAttackDirection {
+		newFile, newRank := square.File+offset, square.Rank+pawnDirection[attackingcolor.Opponent()]
 		if b.IsCellWithinBounds(newFile, newRank) {
 			if coloredPiece := b.GetCell(newFile, newRank); coloredPiece.Piece == Pawn && coloredPiece.Color == attackingcolor {
 				return true
