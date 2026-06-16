@@ -95,7 +95,11 @@ export default function Board() {
               <tr key={rank}>
                 <td
                   className="text-right text-zinc-400 select-none"
-                  style={{ paddingRight: "clamp(2px, 1vw, 8px)", fontSize: cellSize, width: cellSize }}
+                  style={{
+                    paddingRight: "clamp(2px, 1vw, 8px)",
+                    fontSize: cellSize,
+                    width: cellSize,
+                  }}
                 >
                   {rank + 1}
                 </td>
