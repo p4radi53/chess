@@ -102,5 +102,5 @@ func (g *Game) detectCheck(toFile, toRank int) bool {
 		return slices.Contains(g.Board.LegalMoves(Square{toFile, toRank}, g.LastMove()), kingPos)
 	}
 
-	return g.Board.IsSquareAttackedByBishopQueenRook(kingPos, opponentColor)
+	return g.Board.IsSquareUnderAttack(kingPos, opponentColor)
 }

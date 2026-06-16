@@ -24,6 +24,10 @@ type ColoredPiece struct {
 	Color Color
 }
 
+func (c Color) Opponent() Color {
+	return c ^ 1
+}
+
 type Board struct {
 	Cells [8][8]ColoredPiece
 }
