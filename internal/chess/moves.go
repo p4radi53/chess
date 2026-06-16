@@ -1,9 +1,10 @@
 package chess
 
 type Move struct {
-	ColoredPiece ColoredPiece
-	OldSquare    Square
-	NewSquare    Square
+	ColoredPiece  ColoredPiece
+	CapturedPiece ColoredPiece
+	OldSquare     Square
+	NewSquare     Square
 }
 
 func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {

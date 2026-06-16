@@ -6,14 +6,14 @@ import (
 )
 
 type Game struct {
-	Board             Board
-	CurrentTurn       Color
-	RemovedPieces     []Piece
-	WhiteKingPosition Square
-	BlackKingPosition Square
-	IsWhiteInCheck    bool
-	IsBlackInCheck    bool
-	Moves             []Move
+	Board               Board
+	CurrentTurn         Color
+	WhiteKingPosition   Square
+	BlackKingPosition   Square
+	IsWhiteInCheck      bool
+	IsBlackInCheck      bool
+	Moves               []Move
+	CastlingPossibility CastlingPossibility
 }
 
 func NewGame() *Game {
@@ -44,9 +44,12 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 	}
 
 	targetCell := g.Board.GetCell(toFile, toRank)
+	var removedPiece ColoredPiece
+
 	if targetCell.Piece != Empty && targetCell.Color == g.CurrentTurn {
 		return fmt.Errorf("cannot capture own piece")
 	} else if targetCell.Piece != Empty {
+		removedPiece = ColoredPiece{Piece: targetCell.Piece, Color: movedColoredPiece.Opponent()}
 		g.RemovedPieces = append(g.RemovedPieces, targetCell.Piece)
 	}
 	g.Board.SetCell(fromFile, fromRank, Empty, White)
@@ -54,8 +57,9 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 
 	// Remove the captured pawn for en passant
 	if sourceCell.Piece == Pawn && toFile != fromFile && targetCell.Piece == Empty {
-		g.RemovedPieces = append(g.RemovedPieces, Pawn)
-		g.Board.SetCell(toFile, fromRank, Empty, White)
+		removedPiece :=
+
+			g.Board.SetCell(toFile, fromRank, Empty, White)
 	}
 
 	if g.detectCheck(toFile, toRank) {
@@ -66,7 +70,10 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 			g.IsWhiteInCheck = true
 		}
 	}
-	g.Moves = append(g.Moves, Move{ColoredPiece: movedColoredPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}})
+
+	currentMove := Move{ColoredPiece: movedColoredPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}}
+	g.Moves = append(g.Moves, lastMove)
+	g.CastlingPossibility.updateCastlingPossibility(&currentMove)
 	g.CurrentTurn = (g.CurrentTurn + 1) % 2
 	return nil
 }
