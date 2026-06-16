@@ -129,6 +129,9 @@ func (b *Board) IsSquareUnderAttack(square Square, attackingColor Color) bool{
 			if (coloredPiece.Color == byColor && coloredPiece.Piece == Knight){
 				return true
 			}
+		coloredPiece := b.GetCell(newFile, newRank)
+		if b.IsCellWithinBounds(newFile, newRank) && (coloredPiece.Color == byColor && coloredPiece.Piece == Knight){
+			return true
 		}
 	}
 
@@ -145,6 +148,18 @@ func (b *Board) IsSquareUnderAttack(square Square, attackingColor Color) bool{
             }
         }
     }
+	var transform int
+	if byColor == White {
+    	transform = 1
+	} else {
+    	transform = -1
+	}
+	if cp := b.GetCell(square.File+transform, square.Rank-1); b.IsCellWithinBounds(square.File+transform, square.Rank-1) && cp.Piece == Pawn && cp.Color == byColor {
+    	return true
+	}
+	if cp := b.GetCell(square.File+transform, square.Rank+1); b.IsCellWithinBounds(square.File+transform, square.Rank+1) && cp.Piece == Pawn && cp.Color == byColor {
+    	return true
+	}
 
 	// king
 	for _, offset := range [][2]int{{1, 1}, {1, 0}, {1, -1}, {0, 1}, {0, -1}, {-1, 1}, {-1, 0}, {-1, -1}} {
@@ -153,7 +168,7 @@ func (b *Board) IsSquareUnderAttack(square Square, attackingColor Color) bool{
 		if !b.IsCellWithinBounds(newFile, newRank){
 			continue;
 		}
-		if cp := b.GetCell(newFile, newRank); cp.Color == byColor && cp.Piece == King{
+		if cp := b.GetCell(newFile, newRank); b.IsCellWithinBounds(newFile, newRank) && cp.Color == byColor && cp.Piece == King{
 			return true
 		}
 	}
