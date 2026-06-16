@@ -15,6 +15,10 @@ var queenDirections = append(bishopDirections, rookDirections...)
 func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {
 	var moves []Square
 
+	if !b.IsCellWithinBounds(newFile, newRank + colorDirection[color]){
+		return moves
+	} 
+
 	isFrontSquareEmpty := b.IsCellEmpty(from.File, from.Rank+colorDirection[color])
 
 	if isFrontSquareEmpty {
