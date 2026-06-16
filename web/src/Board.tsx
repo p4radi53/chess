@@ -94,10 +94,9 @@ export default function Board() {
             {ranks.map((rank) => (
               <tr key={rank}>
                 <td
-                  className="text-right text-zinc-400 select-none"
+                  className="hidden sm:table-cell text-right text-zinc-400 select-none"
                   style={{
                     paddingRight: "clamp(2px, 1vw, 8px)",
-                    fontSize: cellSize,
                     width: cellSize,
                   }}
                 >
