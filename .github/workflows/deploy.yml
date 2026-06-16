@@ -28,8 +28,6 @@ jobs:
 
       - name: Build React frontend
         working-directory: web
-        env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: |
           bun install --frozen-lockfile
           bun run build
