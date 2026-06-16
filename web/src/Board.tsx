@@ -33,10 +33,14 @@ export default function Board() {
       if (cell.Piece === 0) return;
       if (cell.Color !== game.CurrentTurn) return;
       setSelected(square);
-      const res = await fetch(`${API}/legal-moves?file=${square.file}&rank=${square.rank}`);
+      const res = await fetch(
+        `${API}/legal-moves?file=${square.file}&rank=${square.rank}`,
+      );
       if (res.ok) setLegalMoves(await res.json());
     } else {
-      const isLegal = legalMoves.some((m) => m.file === square.file && m.rank === square.rank);
+      const isLegal = legalMoves.some(
+        (m) => m.file === square.file && m.rank === square.rank,
+      );
       if (!isLegal) {
         setSelected(null);
         setLegalMoves([]);
@@ -78,7 +82,10 @@ export default function Board() {
   return (
     <div className="flex h-screen items-center justify-center bg-zinc-900">
       <div className="flex flex-col items-center gap-2">
-        <table className="border-2 border-zinc-600" style={{ borderCollapse: "collapse" }}>
+        <table
+          className="border-2 border-zinc-600"
+          style={{ borderCollapse: "collapse" }}
+        >
           <tbody>
             {ranks.map((rank) => (
               <tr key={rank}>
@@ -88,8 +95,11 @@ export default function Board() {
                 {files.map((file) => {
                   const cell = game.Board.Cells[file][rank];
                   const isLight = (file + rank) % 2 !== 0;
-                  const isSelected = selected?.file === file && selected?.rank === rank;
-                  const isLegal = legalMoves.some((m) => m.file === file && m.rank === rank);
+                  const isSelected =
+                    selected?.file === file && selected?.rank === rank;
+                  const isLegal = legalMoves.some(
+                    (m) => m.file === file && m.rank === rank,
+                  );
                   const img = pieceImage(cell.Piece, cell.Color);
 
                   return (
@@ -124,7 +134,13 @@ export default function Board() {
                         }}
                       >
                         {img && (
-                          <img src={img} width={52} height={52} alt="" draggable={false} />
+                          <img
+                            src={img}
+                            width={52}
+                            height={52}
+                            alt=""
+                            draggable={false}
+                          />
                         )}
                       </div>
                     </td>
@@ -145,7 +161,10 @@ export default function Board() {
         >
           Reset
         </button>
-        <div className="flex text-sm text-zinc-400 select-none" style={{ paddingLeft: 28 }}>
+        <div
+          className="flex text-sm text-zinc-400 select-none"
+          style={{ paddingLeft: 28 }}
+        >
           {["a", "b", "c", "d", "e", "f", "g", "h"].map((l) => (
             <div key={l} style={{ width: 64, textAlign: "center" }}>
               {l}
