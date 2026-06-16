@@ -6,7 +6,7 @@ lint-go:
 	golangci-lint run ./internal/... ./cmd/...
 
 lint-fe:
-	cd web/chess && npm run lint && npx tsc --noEmit
+	cd web && bun run lint && bunx tsc --noEmit
 
 fmt: fmt-go fmt-fe
 
@@ -14,7 +14,7 @@ fmt-go:
 	gofmt -w ./internal ./cmd
 
 fmt-fe:
-	cd web/chess && npx prettier --write .
+	cd web && bunx prettier --write .
 
 fmt-check: fmt-check-go fmt-check-fe
 
@@ -22,4 +22,4 @@ fmt-check-go:
 	gofmt -l ./internal ./cmd | grep . && exit 1 || exit 0
 
 fmt-check-fe:
-	cd web/chess && npx prettier --check .
+	cd web && bunx prettier --check .

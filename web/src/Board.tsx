@@ -1,10 +1,7 @@
-"use client";
+import { useState, useEffect } from "react";
+import type { GameState, Square } from "./types";
 
-import { useState } from "react";
-import Image from "next/image";
-import { GameState } from "./page";
-
-const API = process.env.NEXT_PUBLIC_API_URL!;
+const API = import.meta.env.VITE_API_URL as string;
 
 const PIECE_LETTER = ["", "K", "Q", "R", "B", "N", "P"];
 
@@ -17,34 +14,34 @@ function pieceImage(piece: number, color: number): string | null {
 const ranks = [7, 6, 5, 4, 3, 2, 1, 0];
 const files = [0, 1, 2, 3, 4, 5, 6, 7];
 
-interface Square {
-  file: number;
-  rank: number;
-}
-export default function Board({ initialGame }: { initialGame: GameState }) {
-  const [game, setGame] = useState<GameState>(initialGame);
-  const [selected, setSelected] = useState<{ square: Square } | null>(null);
+export default function Board() {
+  const [game, setGame] = useState<GameState | null>(null);
+  const [selected, setSelected] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
 
+  useEffect(() => {
+    fetch(`${API}/game`)
+      .then((r) => r.json())
+      .then(setGame);
+  }, []);
+
   async function handleSquareClick(square: Square) {
+    if (!game) return;
     const cell = game.Board.Cells[square.file][square.rank];
 
     if (selected === null) {
       if (cell.Piece === 0) return;
       if (cell.Color !== game.CurrentTurn) return;
-      setSelected({ square });
+      setSelected(square);
       const res = await fetch(
         `${API}/legal-moves?file=${square.file}&rank=${square.rank}`,
       );
       if (res.ok) setLegalMoves(await res.json());
     } else {
-      const from = selected;
-      if (
-        !legalMoves.some(
-          (m) => m.file === square.file && m.rank === square.rank,
-        )
-      ) {
-        //reset selection if clicked on an illegal square
+      const isLegal = legalMoves.some(
+        (m) => m.file === square.file && m.rank === square.rank,
+      );
+      if (!isLegal) {
         setSelected(null);
         setLegalMoves([]);
         return;
@@ -55,8 +52,8 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          from_file: from.square.file,
-          from_rank: from.square.rank,
+          from_file: selected.file,
+          from_rank: selected.rank,
           to_file: square.file,
           to_rank: square.rank,
         }),
@@ -64,8 +61,7 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
       if (res.ok) {
         setGame(await res.json());
       } else {
-        const err = await res.json();
-        console.error("Move failed:", err);
+        console.error("Move failed:", await res.json());
       }
     }
   }
@@ -73,6 +69,14 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
   async function handleReset() {
     const res = await fetch(`${API}/reset`, { method: "POST" });
     if (res.ok) setGame(await res.json());
+  }
+
+  if (!game) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-zinc-900">
+        <span className="text-zinc-400">Loading...</span>
+      </div>
+    );
   }
 
   return (
@@ -92,19 +96,16 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
                   const cell = game.Board.Cells[file][rank];
                   const isLight = (file + rank) % 2 !== 0;
                   const isSelected =
-                    selected?.square.file === file &&
-                    selected?.square.rank === rank;
+                    selected?.file === file && selected?.rank === rank;
                   const isLegal = legalMoves.some(
-                    (m: Square) => m.file === file && m.rank === rank,
+                    (m) => m.file === file && m.rank === rank,
                   );
                   const img = pieceImage(cell.Piece, cell.Color);
 
                   return (
                     <td
                       key={file}
-                      onClick={() =>
-                        handleSquareClick({ file: file, rank: rank })
-                      }
+                      onClick={() => handleSquareClick({ file, rank })}
                       style={{
                         width: 64,
                         height: 64,
@@ -133,7 +134,7 @@ export default function Board({ initialGame }: { initialGame: GameState }) {
                         }}
                       >
                         {img && (
-                          <Image
+                          <img
                             src={img}
                             width={52}
                             height={52}
