@@ -80,7 +80,7 @@ func handleShowLegalMoves(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid request format", "detail": err.Error()})
 		return
 	}
-	moves := game.Board.LegalMoves(chess.Square{File: request.File, Rank: request.Rank}, game.LastMove())
+	moves := game.LegalMoves(chess.Square{File: request.File, Rank: request.Rank}, game.LastMove())
 	if moves == nil {
 		moves = []chess.Square{}
 	}

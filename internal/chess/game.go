@@ -6,19 +6,25 @@ import (
 )
 
 type Game struct {
-	Board             Board
-	CurrentTurn       Color
-	RemovedPieces     []Piece
-	WhiteKingPosition Square
-	BlackKingPosition Square
-	IsWhiteInCheck    bool
-	IsBlackInCheck    bool
-	Moves             []Move
+	Board               Board
+	CurrentTurn         Color
+	WhiteKingPosition   Square
+	BlackKingPosition   Square
+	IsWhiteInCheck      bool
+	IsBlackInCheck      bool
+	Moves               []Move
+	CastlingPossibility CastlingPossibility
 }
 
 func NewGame() *Game {
 	game := &Game{
 		CurrentTurn: White,
+		CastlingPossibility: CastlingPossibility{
+			IsWhiteKingsidePossible:  true,
+			IsWhiteQueensidePossible: true,
+			IsBlackKingsidePossible:  true,
+			IsBlackQueensidePossible: true,
+		},
 	}
 	game.Board.setupFirstPosition()
 	game.WhiteKingPosition = Square{4, 0}
@@ -38,23 +44,28 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 	}
 
 	lastMove := g.LastMove()
-	if !slices.Contains(g.Board.LegalMoves(Square{fromFile, fromRank}, lastMove), Square{toFile,
+	if !slices.Contains(g.LegalMoves(Square{fromFile, fromRank}, lastMove), Square{toFile,
 		toRank}) {
 		return fmt.Errorf("not a legal move for the piece")
 	}
 
 	targetCell := g.Board.GetCell(toFile, toRank)
+	var removedPiece ColoredPiece
 	if targetCell.Piece != Empty && targetCell.Color == g.CurrentTurn {
 		return fmt.Errorf("cannot capture own piece")
 	} else if targetCell.Piece != Empty {
-		g.RemovedPieces = append(g.RemovedPieces, targetCell.Piece)
+		removedPiece = ColoredPiece{Piece: targetCell.Piece, Color: movedColoredPiece.Color.Opponent()}
 	}
 	g.Board.SetCell(fromFile, fromRank, Empty, White)
 	g.Board.SetCell(toFile, toRank, sourceCell.Piece, sourceCell.Color)
 
+	if sourceCell.Piece == King && (toFile-fromFile > 1 || fromFile-toFile > 1) {
+		g.Board.castlingRookMove(movedColoredPiece, Square{fromFile, fromRank}, Square{toFile, toRank})
+	}
+
 	// Remove the captured pawn for en passant
 	if sourceCell.Piece == Pawn && toFile != fromFile && targetCell.Piece == Empty {
-		g.RemovedPieces = append(g.RemovedPieces, Pawn)
+		removedPiece = ColoredPiece{Piece: Pawn, Color: movedColoredPiece.Color.Opponent()}
 		g.Board.SetCell(toFile, fromRank, Empty, White)
 	}
 
@@ -66,7 +77,10 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 			g.IsWhiteInCheck = true
 		}
 	}
-	g.Moves = append(g.Moves, Move{ColoredPiece: movedColoredPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}})
+
+	currentMove := Move{ColoredPiece: movedColoredPiece, CapturedPiece: removedPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}}
+	g.Moves = append(g.Moves, currentMove)
+	g.CastlingPossibility.updateCastlingPossibility(&currentMove)
 	g.CurrentTurn = (g.CurrentTurn + 1) % 2
 	return nil
 }
@@ -92,7 +106,7 @@ func (g *Game) detectCheck(toFile, toRank int) bool {
 	}
 	switch targetCell.Piece {
 	case Pawn, Knight:
-		return slices.Contains(g.Board.LegalMoves(Square{toFile, toRank}, g.LastMove()), kingPos)
+		return slices.Contains(g.LegalMoves(Square{toFile, toRank}, g.LastMove()), kingPos)
 	}
 
 	return g.Board.IsSquareUnderAttack(kingPos, opponentColor)

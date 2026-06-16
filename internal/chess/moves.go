@@ -1,9 +1,10 @@
 package chess
 
 type Move struct {
-	ColoredPiece ColoredPiece
-	OldSquare    Square
-	NewSquare    Square
+	ColoredPiece  ColoredPiece
+	CapturedPiece ColoredPiece
+	OldSquare     Square
+	NewSquare     Square
 }
 
 var pawnDirection = []int{1, -1}       // White, Black
@@ -13,28 +14,28 @@ var bishopDirections = [][2]int{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}
 var rookDirections = [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 var queenDirections = append(bishopDirections, rookDirections...)
 
-func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {
+func (g *Game) pawnMoves(from Square, color Color, lastMove Move) []Square {
 	var moves []Square
 
-	if !b.IsCellWithinBounds(from.File, from.Rank+pawnDirection[color]) {
+	if !g.Board.IsCellWithinBounds(from.File, from.Rank+pawnDirection[color]) {
 		return moves
 	}
 
-	isFrontSquareEmpty := b.IsCellEmpty(from.File, from.Rank+pawnDirection[color])
+	isFrontSquareEmpty := g.Board.IsCellEmpty(from.File, from.Rank+pawnDirection[color])
 
 	if isFrontSquareEmpty {
 		moves = append(moves, Square{File: from.File, Rank: from.Rank + pawnDirection[color]})
 	}
-	if (from.File-1 >= 0) && b.IsCellOccupiedByOpponent(from.File-1, from.Rank+pawnDirection[color], color) {
+	if (from.File-1 >= 0) && g.Board.IsCellOccupiedByOpponent(from.File-1, from.Rank+pawnDirection[color], color) {
 		moves = append(moves, Square{File: from.File - 1, Rank: from.Rank + pawnDirection[color]})
 	}
-	if (from.File+1 < 8) && b.IsCellOccupiedByOpponent(from.File+1, from.Rank+pawnDirection[color], color) {
+	if (from.File+1 < 8) && g.Board.IsCellOccupiedByOpponent(from.File+1, from.Rank+pawnDirection[color], color) {
 		moves = append(moves, Square{File: from.File + 1, Rank: from.Rank + pawnDirection[color]})
 	}
 
 	// Initial double move
 	if (color == White && from.Rank == 1) || (color == Black && from.Rank == 6) {
-		if isFrontSquareEmpty && b.IsCellEmpty(from.File, from.Rank+2*pawnDirection[color]) {
+		if isFrontSquareEmpty && g.Board.IsCellEmpty(from.File, from.Rank+2*pawnDirection[color]) {
 			moves = append(moves, Square{File: from.File, Rank: from.Rank + 2*pawnDirection[color]})
 		}
 	}
@@ -53,13 +54,13 @@ func (b *Board) pawnMoves(from Square, color Color, lastMove Move) []Square {
 	return moves
 }
 
-func (b *Board) knightMoves(from Square, color Color) []Square {
+func (g *Game) knightMoves(from Square, color Color) []Square {
 	var moves []Square
 
 	for _, offset := range knightDirections {
 		newFile := from.File + offset[0]
 		newRank := from.Rank + offset[1]
-		if b.IsCellWithinBounds(newFile, newRank) && !b.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
+		if g.Board.IsCellWithinBounds(newFile, newRank) && !g.Board.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
 			moves = append(moves, Square{File: newFile, Rank: newRank})
 		}
 	}
@@ -67,21 +68,21 @@ func (b *Board) knightMoves(from Square, color Color) []Square {
 	return moves
 }
 
-func (b *Board) slidingMoves(from Square, directions [][2]int, color Color) []Square {
+func (g *Game) slidingMoves(from Square, directions [][2]int, color Color) []Square {
 	var moves []Square
 
 	for _, dir := range directions {
 		for step := 1; step < 8; step++ {
 			newFile := from.File + dir[0]*step
 			newRank := from.Rank + dir[1]*step
-			if !b.IsCellWithinBounds(newFile, newRank) {
+			if !g.Board.IsCellWithinBounds(newFile, newRank) {
 				break
 			}
-			if b.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
+			if g.Board.IsCellOccupiedByOwnPiece(newFile, newRank, color) {
 				break
 			}
 			moves = append(moves, Square{File: newFile, Rank: newRank})
-			if b.IsCellOccupiedByOpponent(newFile, newRank, color) {
+			if g.Board.IsCellOccupiedByOpponent(newFile, newRank, color) {
 				break
 			}
 		}
@@ -89,41 +90,40 @@ func (b *Board) slidingMoves(from Square, directions [][2]int, color Color) []Sq
 	return moves
 }
 
-func (b *Board) kingMoves(from Square, color Color) []Square {
+func (g *Game) kingMoves(from Square, color Color) []Square {
 	var moves []Square
 	for _, offset := range queenDirections {
 		newFile := from.File + offset[0]
 		newRank := from.Rank + offset[1]
 		targetSquare := Square{File: newFile, Rank: newRank}
-		if b.IsCellWithinBounds(newFile, newRank) && !b.IsCellOccupiedByOwnPiece(newFile, newRank, color) && !b.IsSquareUnderAttack(targetSquare, color.Opponent()) {
+		if g.Board.IsCellWithinBounds(newFile, newRank) && !g.Board.IsCellOccupiedByOwnPiece(newFile, newRank, color) && !g.Board.IsSquareUnderAttack(targetSquare, color.Opponent()) {
 			moves = append(moves, Square{File: newFile, Rank: newRank})
 		}
 	}
 
-	// TODO: add castling
-	// TODO: discovered checks
+	moves = append(moves, castlingMoves(g.CastlingPossibility, g.Board, color)...)
 
 	return moves
 }
 
-func (b *Board) LegalMoves(from Square, lastMove Move) []Square {
-	cell := b.GetCell(from.File, from.Rank)
+func (g *Game) LegalMoves(from Square, lastMove Move) []Square {
+	cell := g.Board.GetCell(from.File, from.Rank)
 
 	switch cell.Piece {
 	case Empty:
 		return nil
 	case Pawn:
-		return b.pawnMoves(from, cell.Color, lastMove)
+		return g.pawnMoves(from, cell.Color, lastMove)
 	case Knight:
-		return b.knightMoves(from, cell.Color)
+		return g.knightMoves(from, cell.Color)
 	case Bishop:
-		return b.slidingMoves(from, bishopDirections, cell.Color)
+		return g.slidingMoves(from, bishopDirections, cell.Color)
 	case Rook:
-		return b.slidingMoves(from, rookDirections, cell.Color)
+		return g.slidingMoves(from, rookDirections, cell.Color)
 	case Queen:
-		return b.slidingMoves(from, queenDirections, cell.Color)
+		return g.slidingMoves(from, queenDirections, cell.Color)
 	case King:
-		return b.kingMoves(from, cell.Color)
+		return g.kingMoves(from, cell.Color)
 	}
 	return nil
 }
