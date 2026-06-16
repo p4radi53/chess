@@ -10,7 +10,7 @@ jobs:
     environment: prod
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Add Go to PATH
         run: echo "/usr/local/go/bin" >> $GITHUB_PATH
@@ -26,18 +26,14 @@ jobs:
           cp chess-server /srv/chess-server/chess-server
           sudo systemctl start chess-server
 
-      - name: Build Next.js frontend
-        working-directory: web/chess
+      - name: Build React frontend
+        working-directory: web
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
-          API_URL: ${{ vars.API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: |
           bun install --frozen-lockfile
           bun run build
 
-      - name: Deploy Next.js frontend
+      - name: Deploy React frontend
         run: |
-          sudo systemctl stop chess-web || true
-          rsync -a --delete web/chess/.next/ /srv/chess-web/.next/
-          rsync -a --delete web/chess/public/ /srv/chess-web/public/
-          sudo systemctl start chess-web
+          rsync -a --delete web/dist/ /srv/chess-web/
