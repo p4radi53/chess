@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { GameState, Square } from "./types";
 
-const API = import.meta.env.VITE_API_URL as string;
+const API = "/api";
 
 const PIECE_LETTER = ["", "K", "Q", "R", "B", "N", "P"];
 
