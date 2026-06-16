@@ -8,18 +8,17 @@ import (
 type Game struct {
 	Board             Board
 	CurrentTurn       Color
-	MoveCount         int
 	RemovedPieces     []Piece
 	WhiteKingPosition Square
 	BlackKingPosition Square
 	IsWhiteInCheck    bool
 	IsBlackInCheck    bool
+	Moves             []Move
 }
 
 func NewGame() *Game {
 	game := &Game{
 		CurrentTurn: White,
-		MoveCount:   0,
 	}
 	game.Board.setupFirstPosition()
 	game.WhiteKingPosition = Square{4, 0}
@@ -29,6 +28,8 @@ func NewGame() *Game {
 
 func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 	sourceCell := g.Board.GetCell(fromFile, fromRank)
+	movedColoredPiece := ColoredPiece{Piece: sourceCell.Piece, Color: sourceCell.Color}
+
 	if sourceCell.Piece == Empty {
 		return fmt.Errorf("no piece at source square")
 	}
@@ -36,7 +37,8 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 		return fmt.Errorf("not %v's turn", sourceCell.Color)
 	}
 
-	if !slices.Contains(g.Board.LegalMoves(Square{fromFile, fromRank}), Square{toFile,
+	lastMove := g.LastMove()
+	if !slices.Contains(g.Board.LegalMoves(Square{fromFile, fromRank}, lastMove), Square{toFile,
 		toRank}) {
 		return fmt.Errorf("not a legal move for the piece")
 	}
@@ -49,6 +51,13 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 	}
 	g.Board.SetCell(fromFile, fromRank, Empty, White)
 	g.Board.SetCell(toFile, toRank, sourceCell.Piece, sourceCell.Color)
+
+	// Remove the captured pawn for en passant
+	if sourceCell.Piece == Pawn && toFile != fromFile && targetCell.Piece == Empty {
+		g.RemovedPieces = append(g.RemovedPieces, Pawn)
+		g.Board.SetCell(toFile, fromRank, Empty, White)
+	}
+
 	if g.detectCheck(toFile, toRank) {
 		switch g.CurrentTurn {
 		case White:
@@ -57,9 +66,16 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 			g.IsWhiteInCheck = true
 		}
 	}
-	g.MoveCount++
+	g.Moves = append(g.Moves, Move{ColoredPiece: movedColoredPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}})
 	g.CurrentTurn = (g.CurrentTurn + 1) % 2
 	return nil
+}
+
+func (g *Game) LastMove() Move {
+	if len(g.Moves) == 0 {
+		return Move{}
+	}
+	return g.Moves[len(g.Moves)-1]
 }
 
 func (g *Game) detectCheck(toFile, toRank int) bool {
@@ -76,7 +92,7 @@ func (g *Game) detectCheck(toFile, toRank int) bool {
 	}
 	switch targetCell.Piece {
 	case Pawn, Knight:
-		return slices.Contains(g.Board.LegalMoves(Square{toFile, toRank}), kingPos)
+		return slices.Contains(g.Board.LegalMoves(Square{toFile, toRank}, g.LastMove()), kingPos)
 	}
 
 	return g.Board.IsSquareAttackedByBishopQueenRook(kingPos, opponentColor)
