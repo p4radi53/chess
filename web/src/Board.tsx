@@ -79,6 +79,10 @@ export default function Board() {
     );
   }
 
+  // cell size: fills viewport on mobile, capped at 64px on desktop
+  const cellSize = "min(11vw, 64px)";
+  const pieceSize = "min(8.5vw, 52px)";
+
   return (
     <div className="flex h-screen items-center justify-center bg-zinc-900">
       <div className="flex flex-col items-center gap-2">
@@ -89,7 +93,10 @@ export default function Board() {
           <tbody>
             {ranks.map((rank) => (
               <tr key={rank}>
-                <td className="pr-2 text-right text-sm text-zinc-400 select-none w-5">
+                <td
+                  className="text-right text-zinc-400 select-none"
+                  style={{ paddingRight: "clamp(2px, 1vw, 8px)", fontSize: cellSize, width: cellSize }}
+                >
                   {rank + 1}
                 </td>
                 {files.map((file) => {
@@ -107,8 +114,8 @@ export default function Board() {
                       key={file}
                       onClick={() => handleSquareClick({ file, rank })}
                       style={{
-                        width: 64,
-                        height: 64,
+                        width: cellSize,
+                        height: cellSize,
                         background: isSelected
                           ? "#4fc3f7"
                           : isLegal
@@ -126,8 +133,8 @@ export default function Board() {
                     >
                       <div
                         style={{
-                          width: 64,
-                          height: 64,
+                          width: cellSize,
+                          height: cellSize,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -136,8 +143,7 @@ export default function Board() {
                         {img && (
                           <img
                             src={img}
-                            width={52}
-                            height={52}
+                            style={{ width: pieceSize, height: pieceSize }}
                             alt=""
                             draggable={false}
                           />
@@ -163,10 +169,10 @@ export default function Board() {
         </button>
         <div
           className="flex text-sm text-zinc-400 select-none"
-          style={{ paddingLeft: 28 }}
+          style={{ paddingLeft: "clamp(12px, 3vw, 28px)" }}
         >
           {["a", "b", "c", "d", "e", "f", "g", "h"].map((l) => (
-            <div key={l} style={{ width: 64, textAlign: "center" }}>
+            <div key={l} style={{ width: cellSize, textAlign: "center" }}>
               {l}
             </div>
           ))}
