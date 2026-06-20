@@ -43,8 +43,7 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 		return fmt.Errorf("not %v's turn", sourceCell.Color)
 	}
 
-	lastMove := g.LastMove()
-	if !slices.Contains(g.LegalMoves(Square{fromFile, fromRank}, lastMove), Square{toFile,
+	if !slices.Contains(g.Position().LegalMoves(Square{fromFile, fromRank}), Square{toFile,
 		toRank}) {
 		return fmt.Errorf("not a legal move for the piece")
 	}
@@ -69,17 +68,13 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 		g.Board.SetCell(toFile, fromRank, Empty, White)
 	}
 
-	if g.detectCheck(toFile, toRank) {
-		switch g.CurrentTurn {
-		case White:
-			g.IsBlackInCheck = true
-		case Black:
-			g.IsWhiteInCheck = true
-		}
-	}
-
 	currentMove := Move{ColoredPiece: movedColoredPiece, CapturedPiece: removedPiece, OldSquare: Square{File: fromFile, Rank: fromRank}, NewSquare: Square{File: toFile, Rank: toRank}}
 	g.Moves = append(g.Moves, currentMove)
+
+	g.updateCheckFlags(currentMove)
+	if movedColoredPiece.Piece == King {
+		g.updateKingPosition(currentMove)
+	}
 	g.CastlingPossibility.updateCastlingPossibility(&currentMove)
 	g.CurrentTurn = (g.CurrentTurn + 1) % 2
 	return nil
@@ -92,22 +87,37 @@ func (g *Game) LastMove() Move {
 	return g.Moves[len(g.Moves)-1]
 }
 
-func (g *Game) detectCheck(toFile, toRank int) bool {
-	targetCell := g.Board.GetCell(toFile, toRank)
+func (g *Game) Position() Position {
+	return Position{
+		Board:       g.Board,
+		Castling:    g.CastlingPossibility,
+		SideToMove:  g.CurrentTurn,
+		LastMove:    g.LastMove(),
+		KingSquares: [2]Square{g.WhiteKingPosition, g.BlackKingPosition},
+	}
+}
 
-	movedColor := targetCell.Color
-	opponentColor := (movedColor + 1) % 2
-
-	var kingPos Square
+func (g *Game) updateKingPosition(move Move) {
+	movedColor := move.ColoredPiece.Color
 	if movedColor == White {
+		g.WhiteKingPosition = move.NewSquare
+	} else if movedColor == Black {
+		g.BlackKingPosition = move.NewSquare
+	}
+}
+
+func (g *Game) updateCheckFlags(move Move) {
+	var kingPos Square
+	if move.ColoredPiece.Color == White {
 		kingPos = g.BlackKingPosition
 	} else {
 		kingPos = g.WhiteKingPosition
 	}
-	switch targetCell.Piece {
-	case Pawn, Knight:
-		return slices.Contains(g.LegalMoves(Square{toFile, toRank}, g.LastMove()), kingPos)
-	}
 
-	return g.Board.IsSquareUnderAttack(kingPos, opponentColor)
+	isCheck := g.Board.IsSquareUnderAttack(kingPos, move.ColoredPiece.Color.Opponent())
+	if move.ColoredPiece.Color == White {
+		g.IsBlackInCheck = isCheck
+	} else {
+		g.IsWhiteInCheck = isCheck
+	}
 }
