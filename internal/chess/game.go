@@ -99,9 +99,10 @@ func (g *Game) Position() Position {
 
 func (g *Game) updateKingPosition(move Move) {
 	movedColor := move.ColoredPiece.Color
-	if movedColor == White {
+	switch movedColor {
+	case White:
 		g.WhiteKingPosition = move.NewSquare
-	} else if movedColor == Black {
+	case Black:
 		g.BlackKingPosition = move.NewSquare
 	}
 }
