@@ -58,7 +58,7 @@ func (g *Game) MakeMove(fromFile, fromRank, toFile, toRank int) error {
 	g.Board.SetCell(fromFile, fromRank, Empty, White)
 	g.Board.SetCell(toFile, toRank, sourceCell.Piece, sourceCell.Color)
 
-	if sourceCell.Piece == King && (toFile-fromFile > 1 || fromFile-toFile > 1) {
+	if sourceCell.Piece == King && Abs(toFile-fromFile) > 1 {
 		g.Board.castlingRookMove(movedColoredPiece, Square{fromFile, fromRank}, Square{toFile, toRank})
 	}
 

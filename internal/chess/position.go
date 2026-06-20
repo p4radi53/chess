@@ -33,11 +33,9 @@ func (p Position) pawnMoves(from Square, color Color) []Square {
 		}
 	}
 
-	if (p.LastMove.ColoredPiece.Piece == Pawn) &&
-		(p.LastMove.NewSquare.Rank-p.LastMove.OldSquare.Rank == 2 ||
-			p.LastMove.OldSquare.Rank-p.LastMove.NewSquare.Rank == 2) &&
-		(p.LastMove.NewSquare.File == from.File-1 ||
-			p.LastMove.NewSquare.File == from.File+1) &&
+	if p.LastMove.ColoredPiece.Piece == Pawn &&
+		Abs(p.LastMove.NewSquare.Rank-p.LastMove.OldSquare.Rank) == 2 &&
+		Abs(p.LastMove.NewSquare.File-from.File) == 1 &&
 		p.LastMove.NewSquare.Rank == from.Rank {
 		moves = append(moves, Square{File: p.LastMove.NewSquare.File,
 			Rank: from.Rank + pawnDirection[color]})
