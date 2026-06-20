@@ -23,7 +23,7 @@ func runMoveTests(t *testing.T, tests []moveTest) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &Game{}
 			tt.setup(&g.Board)
-			moves := g.LegalMoves(tt.from, Move{})
+			moves := g.Position().LegalMoves(tt.from)
 			for _, sq := range tt.expected {
 				if !hasMove(moves, sq.File, sq.Rank) {
 					t.Errorf("expected move to %v", sq)
@@ -44,13 +44,14 @@ func TestEnPassant(t *testing.T) {
 	g.Board.SetCell(4, 4, Pawn, White)
 	g.Board.SetCell(3, 4, Pawn, Black)
 
-	lastMove := Move{
+	pos := g.Position()
+	pos.LastMove = Move{
 		ColoredPiece: ColoredPiece{Piece: Pawn, Color: Black},
 		OldSquare:    Square{3, 6},
 		NewSquare:    Square{3, 4},
 	}
 
-	moves := g.LegalMoves(Square{4, 4}, lastMove)
+	moves := pos.LegalMoves(Square{4, 4})
 
 	enPassantTarget := Square{3, 5}
 	if !slices.Contains(moves, enPassantTarget) {
